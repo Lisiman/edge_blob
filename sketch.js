@@ -2,7 +2,7 @@
 //by siman li
 //runs on p5.js, jsfeat, tracking.js
 //december 2016
-//v0.1.0.
+//v0.3.0.
 
 //variable for holding the p5.js capture
 //it reads from the webcam
@@ -36,7 +36,22 @@ var blurSize = null;
 var rhi, ghi, bhi;
 var rlo, glo, blo;
 
-//var afterImg;
+var isNewImage = null;
+
+//instantation mode
+// //p5.js canvas on instantiation mode
+// var sketch = function(p) {
+//   p.setup = function() {
+//     p.createCanvas(700, 410);
+//   };
+//
+//   p.draw = function() {
+//
+//   };
+// }
+//
+// var myp5 = new p5(sketch);
+
 
 //function for setting up() initial conditions
 //part of the p5.js libraries
@@ -50,66 +65,11 @@ function setup() {
 
   //setup jsfeat library with jsfeat library
   setupEdgeDetection();
-
-  //initialize target threshold
-  // by default track white
-  //setTarget(255, 255, 255);
-
-  // tracking.ColorTracker.registerColor('match', function(r, g, b) {
-  // if(r <= rhi && r >= rlo &&
-  // g <= ghi && g >= glo &&
-  // b <= bhi && b >= blo) {
-  //      console.log("yay");
-  //  return true;
-  //
-  // }
-  // console.log("oh no");
-  //  return false;
-  // });
-
-  //  tracker = new tracking.ColorTracker(['match']);
-  // tracker.minDimension = 20; // make this smaller to track smaller objects
-  // capture.elt.id = 'p5video';
-  //img.id = ("p5img");
-  //yuli says here is the magic part
-  // tracking.track('p5img', tracker, { camera: true });
-  // tracking.track('p5img', tracker, { camera: true });
-  // tracker.on('track', function(event) {
-  //   clear();
-  //   strokeWeight(4);
-  //   stroke(255, 0, 0);
-  //   noFill();
-  //   event.data.forEach(function(r) {
-  //     rect(r.x, r.y, r.width, r.height);    });
-  //});
 }
 
-//draw() function runs after setup() on a loop
-//part of the p5.js library
 function draw() {
 
-
-  capture.loadPixels();
-  //don't forget this! - why?
-  if(capture.pixels.length > 0) {
-    updateThresholdMouse();
-    //perform the jsfeat edge detection
-    performEdgeDetection();
-    result = jsfeatToP5(buffer, result);
-    image(result, 0, 0, 640, 500);
-    }
-
-//
-//    if(mouseIsPressed &&
-//     mouseX > 0 && mouseX < width &&
-//     mouseY > 0 && mouseY < height) {
-//     capture.loadPixels();
-//     target = capture.get(mouseX, mouseY);
-//     setTarget(target[0], target[1], target[2]);
-//   }
-//   img.loadPixels();
 }
-
 
 function setupInitialCanvas() {
   //create p5 canvas
@@ -156,11 +116,15 @@ function setTarget(r, g, b, range) {
   blo = b - range;
 }
 
-//take snap picture
-//used by the jsfeat library
-function takesnap(){
-  img = image(result, 0, 500);
-}
+function retrieveWebcamImage() {
+  capture.loadPixels();
+  //check if the webcam is outputting a new image
+  if (capture.pixels.length > 0) {
+    isNewImage = true;
+  } else {
+    isNewImage = false;
+  }
+};
 
 //function for updating the threshold for the jsfeat edge detection
 //works thanks to the p5.js library
@@ -172,18 +136,34 @@ function updateThresholdMouse() {
 
 //perform the edge detection with jsfeat library
 function performEdgeDetection() {
+
+  //update thresholds according to mouse position on canvas
+  updateThresholdMouse();
+
   jsfeat.imgproc.grayscale(capture.pixels, myWidth, myHeight, buffer);
   jsfeat.imgproc.gaussian_blur(buffer, buffer, blurSize, 0);
   jsfeat.imgproc.canny(buffer, buffer, lowThreshold, highThreshold);
 };
 
+//place the edge detection image result on the p5 canvas
+function edgeDetectionTop5() {
+  result = jsfeatToP5(buffer, result);
+  image(result, 0, 0, 640, 500);
+};
 
-
-//when the key is pressed==a, take a snapshot.
+//take a snapshot when the a key is pressed
 //used by the jsfeat library
 //its part of the p5.js library
 function keyTyped() {
   if (key === 'a') {
-      takesnap();
+      takeSnapshot();
     }
+}
+
+//take snap picture
+//used by the jsfeat library
+//relies on the p5.js library
+function takeSnapshot(){
+  saveCanvas('myCanvas', 'png');
+  //img = image(result, 0, 500);
 }
