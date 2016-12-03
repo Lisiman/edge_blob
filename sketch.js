@@ -2,7 +2,7 @@
 //by siman li
 //runs on p5.js, jsfeat, tracking.js
 //december 2016
-//v0.0.6.
+//v0.1.0.
 
 //variable for holding the p5.js capture
 //it reads from the webcam
@@ -16,7 +16,7 @@ var result = null;
 
 //dimension variables
 var myWidth = 640;
-var myHeight = 1000;
+var myHeight = 500;
 
 //auxiliar variable for storing temporal image
 var img = null;
@@ -24,17 +24,19 @@ var img = null;
 //variable to hold button for taking snapshots
 var button = null;
 
-
 var tracker = null;
 
+//threshold variables controlled by mouse
+var lowThresholdMouse = null;
+var highThresholdMouse = null;
 
-//var afterImg;
+var blurSize = null;
 
 //variables for threshold
 var rhi, ghi, bhi;
 var rlo, glo, blo;
 
-
+//var afterImg;
 
 //function for setting up() initial conditions
 //part of the p5.js libraries
@@ -49,6 +51,8 @@ function setup() {
   //setup jsfeat library with jsfeat library
   setupEdgeDetection();
 
+  //initialize target threshold
+  // by default track white
   //setTarget(255, 255, 255);
 
   // tracking.ColorTracker.registerColor('match', function(r, g, b) {
@@ -85,24 +89,17 @@ function setup() {
 function draw() {
 
 
-  ///blablabla
-    capture.loadPixels();
-    if(capture.pixels.length > 0) { // don't forget this!
-      var blurSize = 6;
-      var lowThreshold = mouseX;
-      var highThreshold = mouseY;
-      console.log(mouseX ," ", mouseY);
-      jsfeat.imgproc.grayscale(capture.pixels, myWidth, 490, buffer);
-      jsfeat.imgproc.gaussian_blur(buffer, buffer, blurSize, 0);
-      jsfeat.imgproc.canny(buffer, buffer, lowThreshold, highThreshold);
-      result = jsfeatToP5(buffer, result);
-      image(result, 0, 0, 640, 500);
+  capture.loadPixels();
+  //don't forget this! - why?
+  if(capture.pixels.length > 0) {
+    updateThresholdMouse();
+    //perform the jsfeat edge detection
+    performEdgeDetection();
+    result = jsfeatToP5(buffer, result);
+    image(result, 0, 0, 640, 500);
     }
-  //blablabla
 
-
-
-//  // image(capture, 0,0, 640, 490);
+//
 //    if(mouseIsPressed &&
 //     mouseX > 0 && mouseX < width &&
 //     mouseY > 0 && mouseY < height) {
@@ -111,17 +108,6 @@ function draw() {
 //     setTarget(target[0], target[1], target[2]);
 //   }
 //   img.loadPixels();
-//   if(img.pixels.length > 0) { // don't forget this!
-//     var blurSize = 6;
-//     var lowThreshold = mouseX;
-//     var highThreshold = mouseY;
-//     console.log(mouseX ," ", mouseY);
-//     jsfeat.imgproc.grayscale(img.pixels, w, 490, buffer);
-//     jsfeat.imgproc.gaussian_blur(buffer, buffer, blurSize, 0);
-//     jsfeat.imgproc.canny(buffer, buffer, lowThreshold, highThreshold);
-//     result = jsfeatToP5(buffer, result);
-//     image(result, 0, 0, 640, 500);
-//   }
 }
 
 
@@ -152,8 +138,9 @@ function setupCamera() {
 function setupEdgeDetection() {
     //create a new buffer
     buffer = new jsfeat.matrix_t(myWidth, myHeight, jsfeat.U8C1_t);
-    //initialize target threshold
-    // by default track white
+
+    //set the blur size
+    blurSize = 6;
 }
 
 //function for adjusting thresholds
@@ -174,6 +161,22 @@ function setTarget(r, g, b, range) {
 function takesnap(){
   img = image(result, 0, 500);
 }
+
+//function for updating the threshold for the jsfeat edge detection
+//works thanks to the p5.js library
+function updateThresholdMouse() {
+  lowThreshold = mouseX;
+  highThreshold = mouseY;
+  //console.log(mouseX ," ", mouseY);
+}
+
+//perform the edge detection with jsfeat library
+function performEdgeDetection() {
+  jsfeat.imgproc.grayscale(capture.pixels, myWidth, myHeight, buffer);
+  jsfeat.imgproc.gaussian_blur(buffer, buffer, blurSize, 0);
+  jsfeat.imgproc.canny(buffer, buffer, lowThreshold, highThreshold);
+};
+
 
 
 //when the key is pressed==a, take a snapshot.
