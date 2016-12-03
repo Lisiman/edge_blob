@@ -2,7 +2,10 @@
 //by siman li
 //runs on p5.js, jsfeat, tracking.js
 //december 2016
-//v0.3.0.
+//v0.4.0.
+
+var myp5Canvas = null;
+var myCanvas = null;
 
 //variable for holding the p5.js capture
 //it reads from the webcam
@@ -38,21 +41,6 @@ var rlo, glo, blo;
 
 var isNewImage = null;
 
-//instantation mode
-// //p5.js canvas on instantiation mode
-// var sketch = function(p) {
-//   p.setup = function() {
-//     p.createCanvas(700, 410);
-//   };
-//
-//   p.draw = function() {
-//
-//   };
-// }
-//
-// var myp5 = new p5(sketch);
-
-
 //function for setting up() initial conditions
 //part of the p5.js libraries
 function setup() {
@@ -68,12 +56,23 @@ function setup() {
 }
 
 function draw() {
-
+  //retrieve image from webcam
+  retrieveWebcamImage();
+  //if there is a new image, do the edge detection
+  if(isNewImage) {
+    //perform the jsfeat edge detection
+    performEdgeDetection();
+    //place the image on the p5 canvas
+    edgeDetectionTop5();
+    }
 }
 
 function setupInitialCanvas() {
   //create p5 canvas
-  createCanvas(myWidth, myHeight);
+  //createCanvas(myWidth, myHeight);
+  myp5Canvas = createCanvas(myWidth, myHeight);
+  myCanvas = window.document.getElementById("defaultCanvas0");
+
 
   //paint the background gray
   background(100);
