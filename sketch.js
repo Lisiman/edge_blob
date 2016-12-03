@@ -1,54 +1,73 @@
 //edge blob
 //by siman li
-//runs on p5.js, jstracker, tracking.js
+//runs on p5.js, jsfeat, tracking.js
 //december 2016
-//v0.0.1.
+//v0.0.6.
 
-var capture;
-var buffer;
-var result;
-var tracker;
-var img;
+//variable for holding the p5.js capture
+//it reads from the webcam
+var capture = null;
+
+//variable to hold the buffer used by the jsfeat library
+var buffer = null;
+
+//variable to hold the resulst of the jsfeat library
+var result = null;
+
+//dimension variables
+var myWidth = 640;
+var myHeight = 1000;
+
+//auxiliar variable for storing temporal image
+var img = null;
+
+//variable to hold button for taking snapshots
+var button = null;
+
+
+var tracker = null;
+
+
 //var afterImg;
 
 //variables for threshold
 var rhi, ghi, bhi;
 var rlo, glo, blo;
 
-var w = 640, h = 1000;
-
-function setTarget(r, g, b, range) {
-  range = range || 32;
-  rhi = r + range, rlo = r - range;
-  ghi = g + range, glo = g - range;
-  bhi = b + range, blo = b - range;
-}
 
 
 //function for setting up() initial conditions
 //part of the p5.js libraries
 function setup() {
-  createCanvas(w, h);
-  background(100);
-  capture = createCapture(VIDEO);
-  capture.size(w, h);
-  capture.hide();
-  buffer = new jsfeat.matrix_t(w, h, jsfeat.U8C1_t);
-  button = createButton('snap');
-  // button.mousePressed(takesnap);
-    setTarget(255, 255, 255); // by default track white
+
+  //setup initial canvas with p5.js library
+  setupInitialCanvas();
+
+  //setup camera with p5.js library
+  setupCamera();
+
+  //setup jsfeat library with jsfeat library
+  setupEdgeDetection();
+
+  //setTarget(255, 255, 255);
+
   // tracking.ColorTracker.registerColor('match', function(r, g, b) {
-  //   if(r <= rhi && r >= rlo &&
-  //      g <= ghi && g >= glo &&
-  //      b <= bhi && b >= blo) {
-  //     return true;
-  //   }
-  //   return false;
+  // if(r <= rhi && r >= rlo &&
+  // g <= ghi && g >= glo &&
+  // b <= bhi && b >= blo) {
+  //      console.log("yay");
+  //  return true;
+  //
+  // }
+  // console.log("oh no");
+  //  return false;
   // });
+
   //  tracker = new tracking.ColorTracker(['match']);
   // tracker.minDimension = 20; // make this smaller to track smaller objects
   // capture.elt.id = 'p5video';
   //img.id = ("p5img");
+  //yuli says here is the magic part
   // tracking.track('p5img', tracker, { camera: true });
   // tracking.track('p5img', tracker, { camera: true });
   // tracker.on('track', function(event) {
@@ -64,6 +83,25 @@ function setup() {
 //draw() function runs after setup() on a loop
 //part of the p5.js library
 function draw() {
+
+
+  ///blablabla
+    capture.loadPixels();
+    if(capture.pixels.length > 0) { // don't forget this!
+      var blurSize = 6;
+      var lowThreshold = mouseX;
+      var highThreshold = mouseY;
+      console.log(mouseX ," ", mouseY);
+      jsfeat.imgproc.grayscale(capture.pixels, myWidth, 490, buffer);
+      jsfeat.imgproc.gaussian_blur(buffer, buffer, blurSize, 0);
+      jsfeat.imgproc.canny(buffer, buffer, lowThreshold, highThreshold);
+      result = jsfeatToP5(buffer, result);
+      image(result, 0, 0, 640, 500);
+    }
+  //blablabla
+
+
+
 //  // image(capture, 0,0, 640, 490);
 //    if(mouseIsPressed &&
 //     mouseX > 0 && mouseX < width &&
@@ -87,15 +125,62 @@ function draw() {
 }
 
 
+function setupInitialCanvas() {
+  //create p5 canvas
+  createCanvas(myWidth, myHeight);
 
+  //paint the background gray
+  background(100);
+
+  //create a button for doing snapshots
+  button = createButton('snap');
+}
+
+
+function setupCamera() {
+  //initialize capture of video
+  capture = createCapture(VIDEO);
+
+  //define the capture size with the same dimensions as the canvas
+  capture.size(myWidth, myHeight);
+
+  //hide it
+  capture.hide();
+}
+
+
+function setupEdgeDetection() {
+    //create a new buffer
+    buffer = new jsfeat.matrix_t(myWidth, myHeight, jsfeat.U8C1_t);
+    //initialize target threshold
+    // by default track white
+}
+
+//function for adjusting thresholds
+//it accepts rgb values and range
+function setTarget(r, g, b, range) {
+  //range is either range or 32
+  range = range || 32;
+  rhi = r + range;
+  rlo = r - range;
+  ghi = g + range;
+  glo = g - range;
+  bhi = b + range;
+  blo = b - range;
+}
+
+//take snap picture
+//used by the jsfeat library
 function takesnap(){
   img = image(result, 0, 500);
 }
 
+
+//when the key is pressed==a, take a snapshot.
+//used by the jsfeat library
+//its part of the p5.js library
 function keyTyped() {
   if (key === 'a') {
       takesnap();
     }
 }
-
-//when the key is pressed==a, take a snapshot.
